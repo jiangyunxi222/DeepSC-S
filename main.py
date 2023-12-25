@@ -10,6 +10,7 @@ from __future__ import print_function
 import os
 import time
 import argparse
+from tqdm import tqdm
 import tensorflow as tf
 import numpy as np
 import scipy.io as sio
@@ -44,9 +45,9 @@ def parse_args():
                         help="output dimension of SE-ResNet in semantic decoder.")
     
     # path of tfrecords files
-    parser.add_argument("--trainset_tfrecords_path", type=str, default="path of your trainset.tfrecords",
+    parser.add_argument("--trainset_tfrecords_path", type=str, default="D:/gitcode/DeepSC-S/path to save .tfrecords files/trainset.tfrecords",
                         help="tfrecords path of trainset.")
-    parser.add_argument("--validset_tfrecords_path", type=str, default="path of your validset.tfrecords",
+    parser.add_argument("--validset_tfrecords_path", type=str, default="D:/gitcode/DeepSC-S/path to save .tfrecords files/validset.tfrecords",
                         help="tfrecords path of validset.")
     
     # parameter of wireless channel
@@ -161,7 +162,7 @@ if __name__ == "__main__":
     print("*****************   start train   *****************")
     snr = pow(10, (args.snr_train_dB / 10))
     std = np.sqrt(1 / (2*snr))
-    for epoch in range(args.num_epochs):
+    for epoch in tqdm(range(args.num_epochs), desc='epoch', position=0, ncols=80,leave=False):
         ##########################    train    ##########################
         # read .tfrecords file
         trainset = tf.data.TFRecordDataset(args.trainset_tfrecords_path)
@@ -177,7 +178,7 @@ if __name__ == "__main__":
         # record the train time for each epoch
         start = time.time()
         
-        for step, _input in enumerate(trainset):
+        for step, _input in tqdm(enumerate(trainset), desc='train step',position=1,ncols=80, leave=False):
             # train step
             loss_value = train_step(_input, std)
             loss_float = float(loss_value)
@@ -193,7 +194,7 @@ if __name__ == "__main__":
         
         # print log
         log = "train epoch {}/{}, train_loss = {:.06f}, time = {:.06f}"
-        print(log.format(epoch + 1, args.num_epochs, train_loss, time.time() - start))
+       # print(log.format(epoch + 1, args.num_epochs, train_loss, time.time() - start))
         
         ##########################    valid    ##########################
         # read .tfrecords file
@@ -209,7 +210,7 @@ if __name__ == "__main__":
         # record the valid time for each epoch
         start = time.time()
         
-        for step, _input in enumerate(validset):
+        for step, _input in tqdm(enumerate(validset),desc='valid step', leave=False,position=2,ncols=80):
             # valid step
             loss_value = valid_step(_input, std)
             loss_float = float(loss_value)
@@ -225,8 +226,8 @@ if __name__ == "__main__":
         
         # print log
         log = "valid epoch {}/{}, valid_loss = {:.06f}, time = {:.06f}"
-        print(log.format(epoch + 1, args.num_epochs, valid_loss, time.time() - start))
-        print()
+        #print(log.format(epoch + 1, args.num_epochs, valid_loss, time.time() - start))
+        #print()
         
         ###################    save the train network    ###################
         if (epoch + 1) % 1000 == 0:
